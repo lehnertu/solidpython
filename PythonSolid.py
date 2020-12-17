@@ -213,6 +213,43 @@ class SolidPolyhedron():
     def summary(self):
         print("NP = %d" % self.NP)
         print("faces %d" % len(self.faces))
+    def check(self,debug=False):
+        """
+        We want to check the correctness and completeness of the solid.
+        It is a closed volume with all normals pointing to the same side if all edges
+        exit exactly twice with opposite directions.
+        The debug flag controls the generation of output about every flaw found.
+        """
+        # make a list of all edges starting from the points
+        count = 0
+        edges = [[] for i in range(self.NP)]
+        for f in self.faces:
+            NF = len(f)
+            for i in range(NF-1):
+                edges[f[i]].append(f[i+1])
+                count += 1
+            edges[f[NF-1]].append(f[0])
+            count += 1
+        print('found %d edges' % count)
+        # check for duplicated edges
+        count = 0
+        for p1,e in enumerate(edges):
+            set_e = set()
+            for p2 in e:
+                if p2 in set_e:
+                    if debug: print('found duplicated edge from %d to %d.' % (p1,p2))
+                    count += 1
+                else:
+                    set_e.add(p2)
+        print('found %d duplicated edges' % count)
+        # check for every edge if the opposite direction exists
+        count = 0
+        for p1 in range(self.NP):
+            for p2 in edges[p1]:
+                if not p1 in edges[p2]:
+                    count = count+1
+                    if debug: print('found free edge from %d to %d.' % (p1,p2))
+        print('found %d free edges' % count)
     def getPolyData(self):
         """
         Return a vtkPolyData object
